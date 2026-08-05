@@ -7,8 +7,8 @@
 > **Platform:** Zoho Flow
 >
 > **Technologies:** Zoho CRM, Zoho Books, Deluge, Webhooks
->
-> # Zoho CRM → Zoho Books Invoice Automation
+
+# Zoho CRM → Zoho Books Invoice Automation
 
 Automatically generates, submits, and synchronizes invoices between Zoho CRM and Zoho Books when a Deal reaches the invoicing stage in the CRM Blueprint.
 
@@ -84,7 +84,7 @@ Once a Deal reaches the invoicing stage:
 | File | Purpose |
 |------|---------|
 | README.md | Documentation |
-| flow.png | Zoho Flow configuration |
+| invoice-flow.png | Zoho Flow configuration |
 
 ---
 
