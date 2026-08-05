@@ -15,7 +15,7 @@ The workflow executes whenever either of the following fields is modified to a v
 
 The workflow runs every time these fields are updated.
 
-![track-payment-dates](workflow-rule-screenshot.png)
+![track-payment-dates](workflow-rule-screenshot.jpg)
 
 ---
 
