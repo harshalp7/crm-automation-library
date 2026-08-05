@@ -18,7 +18,9 @@ Automatically generates, submits, and synchronizes invoices between Zoho CRM and
 
 This Zoho Flow automates the complete invoice creation process for customer Deals.
 
-When a Deal reaches the invoice stage in the Zoho CRM Blueprint, a webhook triggers this flow. The automation retrieves all required CRM and Zoho Books information, validates invoice requirements, creates and submits the invoice, synchronizes invoice details back to Zoho CRM, and notifies the administrator if any errors occur.
+The process begins inside **Zoho CRM**, where an adviser progresses a Deal through a Blueprint transition. After confirming the required information, the Blueprint sends a webhook to Zoho Flow.
+
+Zoho Flow then retrieves all required CRM and Zoho Books information, validates invoice requirements, determines the correct salesperson, creates and submits the invoice, synchronizes invoice details back to Zoho CRM, and notifies the administrator if any errors occur.
 
 The result is a fully automated invoicing process with minimal manual intervention and consistent data across both systems.
 
@@ -42,16 +44,18 @@ This process was repetitive, time-consuming, and prone to human error. In additi
 
 # Solution
 
-Once a Deal reaches the invoicing stage:
+Once a Deal reaches the invoice generation stage:
 
-1. Zoho CRM Blueprint triggers a webhook.
-2. Zoho Flow retrieves all required CRM and Zoho Books records.
-3. Invoice validation rules are applied.
-4. The correct Zoho Books salesperson is determined.
-5. A new invoice is created.
-6. The invoice is automatically submitted.
-7. Invoice information is synchronized back to Zoho CRM.
-8. If any step fails, an error notification is sent to the administrator.
+1. Adviser initiates the Blueprint transition in Zoho CRM.
+2. Required Deal information is confirmed through a CRM form.
+3. Zoho CRM Blueprint triggers a webhook.
+4. Zoho Flow retrieves all required CRM and Zoho Books records.
+5. Invoice validation rules are applied.
+6. The correct Zoho Books salesperson is determined.
+7. A new invoice is created.
+8. The invoice is automatically submitted.
+9. Invoice information is synchronized back to Zoho CRM.
+10. If any step fails, an error notification is sent to the administrator.
 
 ---
 
@@ -84,55 +88,110 @@ Once a Deal reaches the invoicing stage:
 | File | Purpose |
 |------|---------|
 | README.md | Documentation |
-| invoice-flow.png | Zoho Flow configuration |
+| invoice-flow.jpg | Zoho Flow workflow |
+| assets/zoho-crm-blueprint.png | Zoho CRM Blueprint trigger |
+| assets/service-agreement-form.png | CRM form used before the webhook is triggered |
+
+---
+
+# Zoho CRM Context
+
+Before Zoho Flow is executed, the automation is initiated entirely within **Zoho CRM**.
+
+An adviser progresses the Deal through a **Blueprint transition**, where CRM ensures all required information has been reviewed before invoice generation begins.
+
+## Step 1 — Start the Blueprint Transition
+
+From the Deal record, the adviser clicks the **Generate Service Agreement** Blueprint transition while the Deal is in the **Service Agreement not Generated** state.
+
+This transition begins the guided invoicing process.
+
+![Zoho CRM Blueprint](assets/zoho-crm-blueprint.png)
+
+---
+
+## Step 2 — Confirm Required Information
+
+Zoho CRM displays a confirmation form where the adviser verifies or updates important information before continuing.
+
+Typical fields include:
+
+- ICL Visa Fees
+- INZ Fees
+- Visa Type
+- Deal Owner
+- Client Details
+- Address Information
+
+This validation ensures that the invoice is generated using the latest CRM information.
+
+![Generate Service Agreement Form](assets/service-agreement-form.png)
+
+---
+
+## Step 3 — Blueprint Starts Zoho Flow
+
+After the adviser submits the form, the Blueprint executes a webhook.
+
+The webhook passes the **Deal ID** to Zoho Flow, which retrieves all remaining CRM and Zoho Books records required to generate the invoice.
 
 ---
 
 # Workflow
 
-![easy-invoice-generation](invoice-flow.jpg)
+![Zoho Flow Workflow](invoice-flow.jpg)
 
 ---
 
 # Trigger
 
-The automation is initiated when a Deal reaches the invoice generation stage within a **Zoho CRM Blueprint**.
+The automation is initiated from a **Zoho CRM Blueprint transition** after the adviser confirms the required Deal information through the **Generate Service Agreement** form.
 
-The Blueprint sends a webhook request to Zoho Flow containing the Deal information required to begin invoice creation.
+Upon submission, the Blueprint invokes a webhook that passes the Deal ID to Zoho Flow. The flow then retrieves the latest Deal, Contact, Product, Customer, and Item records before creating and submitting the invoice.
 
 ---
 
 # Data Flow
 
 ```text
-Zoho CRM Blueprint
-        │
-        ▼
-Webhook Trigger
-        │
-        ▼
+Adviser
+    │
+    ▼
+Zoho CRM Deal
+    │
+    ▼
+Blueprint Transition
+    │
+    ▼
+Confirmation Form
+    │
+    ▼
+Blueprint Webhook
+    │
+    ▼
 Zoho Flow
-        │
-        ├── Fetch Deal
-        ├── Validate Invoice
-        ├── Find Salesperson
-        ├── Fetch Contact
-        ├── Fetch Product
-        ├── Fetch Customer
-        ├── Fetch Item
-        │
-        ▼
+    │
+    ├── Fetch Deal
+    ├── Validate Invoice
+    ├── Find Salesperson
+    ├── Fetch Contact
+    ├── Fetch Product
+    ├── Fetch Customer
+    ├── Fetch Item
+    │
+    ▼
 Create Invoice
-        │
-   ┌────┴────┐
-   │         │
+    │
+┌───┴────────┐
+│            │
+▼            ▼
 Success    Failure
-   │         │
-   ▼         ▼
+│            │
+▼            ▼
 Submit     Email Admin
 Invoice
-   │
-   ▼
+│
+▼
 Update CRM
 ```
 
@@ -141,45 +200,53 @@ Update CRM
 # Logic Flow
 
 ```text
-Webhook Received
-      │
-      ▼
+Deal reaches Blueprint transition
+             │
+             ▼
+Adviser confirms information
+             │
+             ▼
+Blueprint sends webhook
+             │
+             ▼
+Receive Webhook
+             │
+             ▼
 Fetch Deal
-      │
-      ▼
+             │
+             ▼
 Validate Invoice Requirements
-      │
-      ▼
+             │
+             ▼
 Determine Salesperson
-      │
-      ▼
+             │
+             ▼
 Fetch Contact
-      │
-      ▼
+             │
+             ▼
 Fetch Product
-      │
-      ▼
+             │
+             ▼
 Fetch Customer
-      │
-      ▼
+             │
+             ▼
 Fetch Item
+             │
+             ▼
+Create Invoice
+             │
+      ┌──────┴──────┐
+      │             │
+      ▼             ▼
+   Success       Failure
+      │             │
+      ▼             ▼
+Submit Invoice   Send Email
       │
       ▼
-Create Invoice
-      │
- ┌────┴────┐
- │         │
- ▼         ▼
-Success   Failure
- │         │
- ▼         ▼
-Submit   Send Email
-Invoice
- │
- ▼
 Update CRM
- │
- ▼
+      │
+      ▼
 Finish
 ```
 
@@ -189,7 +256,7 @@ Finish
 
 ## 1. Receive Webhook
 
-The workflow begins when Zoho CRM Blueprint sends a webhook request after a Deal reaches the invoice stage.
+The workflow begins when the Zoho CRM Blueprint sends a webhook after the adviser completes the Blueprint transition.
 
 ---
 
@@ -293,6 +360,8 @@ This keeps Zoho CRM synchronized with Zoho Books.
 
 | Component | Purpose |
 |-----------|---------|
+| Blueprint Transition | Adviser initiates the workflow |
+| CRM Confirmation Form | Validate required Deal information |
 | Webhook | Starts the workflow |
 | Fetch Deal | Retrieve CRM Deal |
 | zero_fees_invoice | Validate zero-fee invoice scenarios |
@@ -313,7 +382,7 @@ This keeps Zoho CRM synchronized with Zoho Books.
 
 | Condition | Action |
 |-----------|--------|
-| Blueprint webhook received | Start workflow |
+| Adviser submits Blueprint form | Start workflow |
 | Zero-fee validation passes | Continue |
 | Salesperson found | Assign invoice ownership |
 | Invoice created successfully | Submit invoice |
@@ -326,7 +395,8 @@ This keeps Zoho CRM synchronized with Zoho Books.
 
 ### Before
 
-- Deal reaches invoice stage
+- Deal reaches the invoice generation Blueprint transition
+- Adviser confirms required information
 - Customer exists
 - Product exists
 - No invoice has been created
@@ -335,6 +405,7 @@ This keeps Zoho CRM synchronized with Zoho Books.
 
 ### After
 
+- Webhook starts Zoho Flow
 - Invoice created in Zoho Books
 - Correct salesperson assigned
 - Invoice submitted
@@ -379,6 +450,7 @@ This automation depends on:
 # Technical Notes
 
 - Event-driven architecture using Zoho Flow.
+- Initiated through a Zoho CRM Blueprint transition.
 - Uses a Blueprint-triggered webhook to initiate processing.
 - Integrates Zoho CRM and Zoho Books.
 - Uses custom Deluge functions to encapsulate business rules.
